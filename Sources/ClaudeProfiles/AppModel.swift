@@ -30,7 +30,25 @@ final class AppModel: ObservableObject {
     let tracker: RuntimeTracker
     let launcher = Launcher()
 
-    @Published private(set) var profiles: [Profile] = []
+    @Published private(set) var profiles: [Profile] = [] {
+        didSet {
+            // A warning about a profile that has since been added/removed/renamed is stale.
+            if oldValue.map(\.id) != profiles.map(\.id) || oldValue.map(\.name) != profiles.map(\.name) { errorMessage = nil }
+        }
+    }
+    /// Short, self-dismissing notice (e.g. an automation call that named an unknown profile).
+    @Published private(set) var transientNotice: String?
+    private var noticeTask: Task<Void, Never>?
+
+    func showTransientNotice(_ text: String, seconds: Double = 4) {
+        AppLog.write("notice: \(text)")
+        transientNotice = text
+        noticeTask?.cancel()
+        noticeTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            if !Task.isCancelled { self?.transientNotice = nil }
+        }
+    }
     @Published private(set) var instances: [RunningInstance] = []
     @Published private(set) var installation: ClaudeInstallation?
     @Published private(set) var latestRelease: AvailableRelease?
@@ -167,6 +185,11 @@ final class AppModel: ObservableObject {
 
     @discardableResult
     func launchAsync(_ profile: Profile, activate: Bool = true) async -> pid_t? {
+        // The profile may have been deleted while a restart/relaunch was in flight.
+        guard store.profile(id: profile.id) != nil else {
+            AppLog.write("skip launch of \(profile.name): profile no longer exists")
+            return nil
+        }
         guard !isRunning(profile) else {
             if activate, let inst = instances(for: profile).last { launcher.focus(pid: inst.pid) }
             return instances(for: profile).last?.pid
@@ -526,13 +549,23 @@ final class AppModel: ObservableObject {
         start()
         let action = url.host ?? ""
         let key = url.pathComponents.dropFirst().first?.removingPercentEncoding
-        let profile = key.flatMap { k in profiles.first { $0.id == k } ?? profiles.first { $0.name.caseInsensitiveCompare(k) == .orderedSame } }
         AppLog.write("automation \(action) \(key ?? "")")
+        // Resolve against the store as it is on disk right now (the CLI or another window may have just
+        // created/renamed the profile), not against a list that is refreshed every 2 seconds.
+        refresh()
+        let profile = key.flatMap { k in
+            store.profile(id: k) ?? store.profiles.first { $0.name.caseInsensitiveCompare(k) == .orderedSame }
+        }
+        let needsProfile = ["launch", "open", "quit", "restart", "signin"].contains(action)
+        if needsProfile && profile == nil {
+            showTransientNotice("No profile named “\(key ?? "")”. The link was ignored.")
+            return
+        }
         switch action {
-        case "launch", "open": if let p = profile { primaryAction(p) }
-        case "quit": if let p = profile { quit(p) }
-        case "restart": if let p = profile { restart(p) }
-        case "signin": if let p = profile { signIn(p) }
+        case "launch", "open": primaryAction(profile!)
+        case "quit": quit(profile!)
+        case "restart": restart(profile!)
+        case "signin": signIn(profile!)
         case "launch-all": launchAll()
         case "quit-all": quitAll()
         case "check-updates": Task { await checkForUpdates(userInitiated: true) }
@@ -541,10 +574,7 @@ final class AppModel: ObservableObject {
             if let path = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "path" })?.value {
                 AppDelegate.snapshotMainWindow(to: path)
             }
-        default: errorMessage = "Unknown claudeprofiles:// action “\(action)”."
-        }
-        if profile == nil, ["launch", "open", "quit", "restart", "signin"].contains(action) {
-            errorMessage = "No profile named “\(key ?? "")”."
+        default: showTransientNotice("Unknown claudeprofiles:// action “\(action)”.")
         }
     }
 

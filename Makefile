@@ -11,7 +11,7 @@ test:
 	swift test
 
 icon:
-	mkdir -p build && swift scripts/make-icon.swift build/AppIcon.icns
+	mkdir -p build && swift scripts/make-icon.swift Resources/AppIcon-source.png build/AppIcon.icns
 
 app:
 	scripts/build.sh

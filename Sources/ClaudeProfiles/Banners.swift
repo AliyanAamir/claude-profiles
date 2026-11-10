@@ -95,6 +95,10 @@ struct BannerStack: View {
                 }
             }
 
+            if let notice = model.transientNotice {
+                Banner(symbol: "info.circle.fill", tint: .secondary, title: notice) { EmptyView() }
+            }
+
             if let error = model.errorMessage {
                 Banner(symbol: "exclamationmark.triangle.fill", tint: .yellow, title: "Something Needs Attention", message: error) {
                     Button("Dismiss") { model.errorMessage = nil }
@@ -103,6 +107,7 @@ struct BannerStack: View {
         }
         .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.9), value: model.updateProgress)
         .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.9), value: model.errorMessage)
+        .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.9), value: model.transientNotice)
         .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.9), value: model.signingInProfileID)
     }
 

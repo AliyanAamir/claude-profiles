@@ -21,8 +21,9 @@ BIN_DIR="$(swift build -c release "${ARCH_FLAGS[@]}" --show-bin-path)"
 
 echo "==> Icon"
 mkdir -p "$ROOT/build"
-if [[ ! -f "$ROOT/build/AppIcon.icns" || "$ROOT/scripts/make-icon.swift" -nt "$ROOT/build/AppIcon.icns" ]]; then
-  swift "$ROOT/scripts/make-icon.swift" "$ROOT/build/AppIcon.icns"
+ICON_SRC="$ROOT/Resources/AppIcon-source.png"
+if [[ ! -f "$ROOT/build/AppIcon.icns" || "$ROOT/scripts/make-icon.swift" -nt "$ROOT/build/AppIcon.icns" || "$ICON_SRC" -nt "$ROOT/build/AppIcon.icns" ]]; then
+  swift "$ROOT/scripts/make-icon.swift" "$ICON_SRC" "$ROOT/build/AppIcon.icns"
 fi
 
 echo "==> Assembling $APP"

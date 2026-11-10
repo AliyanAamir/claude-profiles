@@ -79,7 +79,8 @@ Every routing decision is logged to `~/Library/Logs/ClaudeProfiles/ClaudeProfile
 | ⌘, | Settings |
 
 `claudeprofiles://<action>/<profile id or name>` works from Shortcuts, Raycast or `open`. Actions:
-`launch`, `open`, `quit`, `restart`, `signin`, `launch-all`, `quit-all`, `check-updates`.
+`launch`, `open`, `quit`, `restart`, `signin`, `launch-all`, `quit-all`, `check-updates`. A link that names
+a profile that doesn't exist is ignored. It shows a short notice that dismisses itself, and the event is logged.
 
 The bundled CLI `Claude Profiles.app/Contents/MacOS/claude-profiles-cli` provides `status`, `profiles`,
 `create`, `delete`, `launch`, `quit`, `check-update`, `verify <app>`, `route <pid> <url>`, and
@@ -96,8 +97,10 @@ make dmg        # dist/ClaudeProfiles-<version>.dmg
 make release    # test + app + dmg (same as scripts/release.sh)
 ```
 
-The version is set in `VERSION` and nowhere else. The app icon is drawn by `scripts/make-icon.swift`
-(original artwork) and converted with `iconutil`.
+The version is set in `VERSION` and nowhere else. The app icon artwork is `Resources/AppIcon-source.png`.
+`scripts/make-icon.swift` crops it to the solid tile, which drops the source's soft shadow and fringe. It then masks the tile to a clean macOS
+rounded rect on the 824-in-1024 grid and renders every size from 16 to 1024 px at 1x and 2x into `AppIcon.icns`. The same icon is used
+for the About panel and the DMG volume. The menu bar item uses a monochrome SF Symbol template.
 
 ### Layout
 
