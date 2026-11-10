@@ -4,12 +4,14 @@ Run several Claude Desktop accounts side by side on one Mac. Each profile is a s
 with its own sign-in, chats, settings and MCP config. All profiles run the **same** official
 `/Applications/Claude.app`, so one update covers all of them.
 
+![Claude Profiles](docs/screenshot.png)
+
 > **Unofficial.** Claude Profiles is not made by, affiliated with, or endorsed by Anthropic. It launches
 > the official Claude app and never modifies, patches, copies or re-signs it. "Claude" is a trademark of Anthropic.
 
 ## Install
 
-1. Open `ClaudeProfiles-<version>.dmg` and drag **Claude Profiles** to Applications.
+1. Download the latest `ClaudeProfiles-<version>.dmg` from [Releases](https://github.com/AliyanAamir/claude-profiles/releases/latest), open it, and drag **Claude Profiles** to Applications.
 2. The app is ad-hoc signed (no Developer ID), so the first time you open it, Control-click it and choose **Open**.
 
 Requires macOS 15 or later and Claude Desktop in `/Applications/Claude.app`.
@@ -123,3 +125,7 @@ scripts/                      build.sh, make-dmg.sh, release.sh, make-icon.swift
 - `~/Library/Application Support/ClaudeProfiles/runtime.json`: PID → launch version records
 - `~/Library/Application Support/ClaudeProfiles/Profiles/<id>/`: Claude data for each profile
 - `~/Library/Logs/ClaudeProfiles/ClaudeProfiles.log`: app log
+
+## License
+
+MIT. See [LICENSE](LICENSE).
